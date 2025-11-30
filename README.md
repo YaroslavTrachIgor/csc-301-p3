@@ -1,4 +1,5 @@
-# CSC 301-1_FA_2025 Group Assignment Program 3: Pac-Man
+# csc-301-p3
+## Program 3 | Pac-Man
 
 <div align="center">
 
