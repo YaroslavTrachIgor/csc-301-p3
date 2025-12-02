@@ -1,5 +1,4 @@
-# csc-301-p3
-## Program 3 | Pac-Man
+# The Pac-Man Game
 
 <div align="center">
 
@@ -17,7 +16,7 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Project Overview](#-project-overview)
 - [Prerequisites](#-prerequisites)
@@ -30,7 +29,7 @@
 
 ---
 
-## 🎮 Project Overview
+## Project Overview
 
 This project is part of the **CSC 301-1 (Fall 2025)** course at the University of Tampa. The assignment involves implementing custom artificial intelligence for the four ghosts in a Pac-Man game, each with distinct behavioral patterns.
 
@@ -45,7 +44,7 @@ The game is built using Java's AWT/Swing graphics library and features:
 
 ---
 
-## 🔧 Prerequisites
+## Prerequisites
 
 Before installing and running this project, ensure you have the following installed:
 
@@ -67,7 +66,7 @@ Before installing and running this project, ensure you have the following instal
 
 ---
 
-## 📥 Installation
+## Installation
 
 ### Step 1: Clone the Repository
 
@@ -107,7 +106,7 @@ The project requires the following image files in the root directory:
 
 ---
 
-## 🚀 Building and Running
+## Building and Running
 
 ### Method 1: Command Line Compilation
 
@@ -164,7 +163,7 @@ Upon successful execution, a game window should appear with:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 csc-301-p3/
@@ -221,7 +220,7 @@ Each ghost class extends `Ghost` and implements unique AI behavior:
 
 ---
 
-## 📝 Assignment Requirements
+## Assignment Requirements
 
 The assignment prompt specified the following requirements:
 
@@ -244,7 +243,7 @@ The assignment prompt specified the following requirements:
 
 ---
 
-## 📚 Original Source Code
+## Original Source Code
 
 This project is based on an open-source Pac-Man game implementation. The original code and tutorial are available at:
 
@@ -264,7 +263,7 @@ The original implementation demonstrates how to create a Pac-Man game using Java
 
 ---
 
-## 📖 Academic Citation
+## Academic Citation
 
 This project uses code from an open-source Pac-Man tutorial. The original tutorial and implementation serve as the foundation for this assignment, with modifications made to support custom ghost AI development as specified in the assignment requirements.
 

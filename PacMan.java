@@ -189,23 +189,28 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 resetPositions();
             }
 
-            // Ghost movement is disabled for now
-            // TODO: Uncomment when implementing ghost AI
-            /*
-            if (ghost.y == tileSize*9 && ghost.direction != 'U' && ghost.direction != 'D') {
-                ghost.updateDirection('U');
-            }
+            ghost.move();  // Chooses direction and sets velocity
+
+            // Tentative move
             ghost.x += ghost.velocityX;
             ghost.y += ghost.velocityY;
+
+            // Check collisions
+            boolean collided = false;
             for (Block wall : walls) {
-                if (collision(ghost, wall) || ghost.x <= 0 || ghost.x + ghost.width >= boardWidth) {
-                    ghost.x -= ghost.velocityX;
-                    ghost.y -= ghost.velocityY;
-                    char newDirection = directions[random.nextInt(4)];
-                    ghost.updateDirection(newDirection);
+                if (collision(ghost, wall)) {
+                    collided = true;
+                    break;
                 }
             }
-            */
+            if (ghost.x <= 0 || ghost.x + ghost.width >= boardWidth || collided) {
+                // Revert move
+                ghost.x -= ghost.velocityX;
+                ghost.y -= ghost.velocityY;
+                // Re-choose direction
+                ghost.move();
+            }
+
         }
 
         //check food collision
