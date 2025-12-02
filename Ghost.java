@@ -28,15 +28,15 @@ public abstract class Ghost extends Block {
      * @return A Point representing the target x,y coordinates
      */
     public abstract Point calculateTarget();
-    
+
     /**
      * Chooses the best direction to move towards the target.
      * Considers walls and current position.
-     * 
+     *
      * @return The chosen direction ('U', 'D', 'L', or 'R')
      */
     public abstract char chooseDirection();
-    
+
     /**
      * Moves the ghost based on its AI behavior.
      * This method is called each game frame to update ghost position.

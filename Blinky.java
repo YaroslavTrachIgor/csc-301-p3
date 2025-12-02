@@ -1,194 +1,163 @@
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.awt.Image;
+import java.awt.Point;
+import java.util.*;
 
-/**
- * Blinky - The direct one (Red Ghost).
- * Blinky chases Pac-Man based on current locations using BFS pathfinding.
- * This implementation uses BFS to find the shortest path to Pac-Man's current grid position
- * and selects the next direction along that path, avoiding immediate reverses.
- */
 public class Blinky extends Ghost {
 
-    private int tileSize;
-    private int rows;
-    private int cols;
-    private boolean[][] wallGrid;
-
-    /**
-     * Constructor for Blinky (Red Ghost).
-     * Precomputes the wall grid for fast BFS lookups.
-     */
     public Blinky(PacMan game, Image image, int x, int y, int width, int height) {
         super(game, image, x, y, width, height);
-        tileSize = game.getTileSize();
-        rows = game.getBoardHeight() / tileSize;
-        cols = game.getBoardWidth() / tileSize;
-        wallGrid = new boolean[rows][cols];
-        for (Block wall : game.getWalls()) {
-            int wr = wall.y / tileSize;
-            int wc = wall.x / tileSize;
-            if (wr >= 0 && wr < rows && wc >= 0 && wc < cols) {
-                wallGrid[wr][wc] = true;
-            }
-        }
     }
 
-    /**
-     * Calculates the target position for Blinky.
-     * Blinky's target is simply Pac-Man's current position.
-     */
     @Override
     public Point calculateTarget() {
-        Block pac = game.getPacman();
-        if (pac != null) {
-            return new Point(pac.x, pac.y);
-        }
-        return new Point(x, y);
+        Block pacman = game.getPacman();
+        return new Point(pacman.x, pacman.y);
     }
 
-    /**
-     * Gets the current grid column of the ghost.
-     */
-    private int getCol() {
-        return x / tileSize;
-    }
-
-    /**
-     * Gets the current grid row of the ghost.
-     */
-    private int getRow() {
-        return y / tileSize;
-    }
-
-    /**
-     * Checks if a grid cell is a wall.
-     */
-    private boolean isWall(int r, int c) {
-        return (r < 0 || r >= rows || c < 0 || c >= cols) || wallGrid[r][c];
-    }
-
-    /**
-     * Gets the opposite direction to avoid immediate reverses.
-     */
-    private char getOpposite(char dir) {
-        switch (dir) {
-            case 'U': return 'D';
-            case 'D': return 'U';
-            case 'L': return 'R';
-            case 'R': return 'L';
-            default: return ' ';
-        }
-    }
-
-    /**
-     * Chooses the best direction using BFS to Pac-Man's current position.
-     * Performs BFS on the grid to find the shortest path, reconstructs it,
-     * and returns the direction to the next cell on the path.
-     * Skips the opposite direction from the current one to avoid reversing.
-     */
     @Override
     public char chooseDirection() {
-        Block pac = game.getPacman();
-        if (pac == null) {
-            return direction;
-        }
+        Point target = calculateTarget();
+        return findPathBFS(target);
+    }
 
-        int gcol = getCol();
-        int grow = getRow();
-        int pcol = pac.x / tileSize;
-        int prow = pac.y / tileSize;
+    @Override
+    public void move() {
+        char bestDirection = chooseDirection();
+        updateDirection(bestDirection);
+        this.velocityX = this.velocityX / 2;
+        this.velocityY = this.velocityY / 2;
+    }
 
-        if (gcol == pcol && grow == prow) {
-            return direction; // Already at target
-        }
 
-        Point start = new Point(gcol, grow);
-        Point goal = new Point(pcol, prow);
 
-        Queue<Point> queue = new LinkedList<>();
-        Map<Point, Point> cameFrom = new HashMap<>();
-        Set<Point> visited = new HashSet<>();
+    private char findPathBFS(Point target) {
+        int tileSize = game.getTileSize();
 
-        queue.offer(start);
-        visited.add(start);
-        cameFrom.put(start, null);
+        int startRow = this.y / tileSize;
+        int startCol = this.x / tileSize;
+        int targetRow = target.y / tileSize;
+        int targetCol = target.x / tileSize;
 
-        boolean found = false;
-        Point goalPoint = null;
+        Queue<Node> queue = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
 
-        int[] drs = {-1, 1, 0, 0};      // U, D, L, R
-        int[] dcs = {0, 0, -1, 1};
-        char[] dirChars = {'U', 'D', 'L', 'R'};
+        Node startNode = new Node(startRow, startCol, null, ' ');
+        queue.offer(startNode);
+        visited.add(startRow + "," + startCol);
 
-        while (!queue.isEmpty() && !found) {
-            Point curr = queue.poll();
-            if (curr.x == goal.x && curr.y == goal.y) {
-                goalPoint = curr;
-                found = true;
-                break;
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        char[] directionChars = {'U', 'D', 'L', 'R'};
+
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+
+            if (current.row == targetRow && current.col == targetCol) {
+                return getFirstDirection(current);
             }
 
             for (int i = 0; i < 4; i++) {
-                // Skip opposite direction only from start position
-                if (curr.equals(start) && dirChars[i] == getOpposite(direction)) {
-                    continue;
-                }
+                int newRow = current.row + directions[i][0];
+                int newCol = current.col + directions[i][1];
+                String posKey = newRow + "," + newCol;
 
-                int nr = curr.y + drs[i];
-                int nc = curr.x + dcs[i];
-
-                if (!isWall(nr, nc)) {
-                    Point nextPoint = new Point(nc, nr);
-                    if (!visited.contains(nextPoint)) {
-                        visited.add(nextPoint);
-                        queue.offer(nextPoint);
-                        cameFrom.put(nextPoint, curr);
-                    }
+                if (isValidPosition(newRow, newCol) && !visited.contains(posKey)) {
+                    visited.add(posKey);
+                    Node newNode = new Node(newRow, newCol, current, directionChars[i]);
+                    queue.offer(newNode);
                 }
             }
         }
 
-        if (goalPoint == null) {
-            return direction; // No path found, keep current
-        }
-
-        // Reconstruct path
-        List<Point> path = new ArrayList<>();
-        Point curr = goalPoint;
-        while (curr != null) {
-            path.add(curr);
-            curr = cameFrom.get(curr);
-        }
-        Collections.reverse(path);
-
-        if (path.size() < 2) {
-            return direction;
-        }
-
-        // Next position on path
-        Point nextPos = path.get(1);
-        int dr = nextPos.y - start.y;
-        int dc = nextPos.x - start.x;
-
-        if (dr == -1) return 'U';
-        if (dr == 1) return 'D';
-        if (dc == -1) return 'L';
-        if (dc == 1) return 'R';
-
-        return direction; // Fallback
+        return findValidDirection();
     }
 
-    /**
-     * Moves Blinky: chooses direction and updates velocity.
-     * Position update and collision handling should be done in PacMan.move().
-     */
-    @Override
-    public void move() {
-        char newDir = chooseDirection();
-        updateDirection(newDir);
-        // Position update: x += velocityX; y += velocityY; handled externally
-        // Collision revert and re-choose also handled externally
+    private boolean isValidPosition(int row, int col) {
+        int tileSize = game.getTileSize();
+        int x = col * tileSize;
+        int y = row * tileSize;
+
+        if (x < 0 || x >= game.getBoardWidth() || y < 0 || y >= game.getBoardHeight()) {
+            return false;
+        }
+
+        for (Block wall : game.getWalls()) {
+            if (wall.x == x && wall.y == y) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private char getFirstDirection(Node node) {
+        Node current = node;
+        while (current.parent != null && current.parent.parent != null) {
+            current = current.parent;
+        }
+
+        if (current.direction != ' ') {
+            return current.direction;
+        }
+
+        return this.direction;
+    }
+
+    private char findValidDirection() {
+        char[] directions = {'U', 'D', 'L', 'R'};
+        Random random = new Random();
+
+        if (isDirectionValid(this.direction)) {
+            return this.direction;
+        }
+
+        for (char dir : directions) {
+            if (isDirectionValid(dir)) {
+                return dir;
+            }
+        }
+
+        return this.direction;
+    }
+
+    private boolean isDirectionValid(char direction) {
+        int tileSize = game.getTileSize();
+        int testX = this.x;
+        int testY = this.y;
+
+        switch (direction) {
+            case 'U': testY -= tileSize; break;
+            case 'D': testY += tileSize; break;
+            case 'L': testX -= tileSize; break;
+            case 'R': testX += tileSize; break;
+        }
+
+        if (testX < 0 || testX >= game.getBoardWidth() || testY < 0 || testY >= game.getBoardHeight()) {
+            return false;
+        }
+
+        for (Block wall : game.getWalls()) {
+            if (wall.x == testX && wall.y == testY) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private class Node {
+        int row;
+        int col;
+        Node parent;
+        char direction;
+
+        Node(int row, int col, Node parent, char direction) {
+            this.row = row;
+            this.col = col;
+            this.parent = parent;
+            this.direction = direction;
+        }
     }
 }
-

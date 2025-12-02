@@ -86,7 +86,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         //    ghost.updateDirection(newDirection);
         //}
         //how long it takes to start timer, milliseconds gone between frames
-        gameLoop = new Timer(50, this); //20fps (1000/50)
+        gameLoop = new Timer(75, this); //20fps (1000/50)
         gameLoop.start();
 
     }
