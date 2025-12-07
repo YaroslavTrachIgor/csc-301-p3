@@ -1,10 +1,17 @@
 import java.awt.*;
 import java.util.HashSet;
 
-/**
- * Represents a basic block/entity in the Pac-Man game.
- * Used for walls, food, Pac-Man, and ghosts.
- */
+/*
+Yaroslav Trach and Darwin Prowant
+CSC 301
+Program 3
+Last Edited: 12/04/2025
+
+This class is the main Block object. It is used for walls, food, Pac-Man, and ghosts.
+
+ACADEMIC CITATION:
+YouTube. (n.d.). *Pacman Java Tutorial* [Video]. YouTube. https://youtu.be/lB_J-VNMVpE
+*/
 public class Block {
     int x;
     int y;

@@ -4,6 +4,29 @@ import java.util.HashSet;
 import java.util.Random;
 import javax.swing.*;
 
+/*
+Yaroslav Trach and Darwin Proviant
+CSC 301
+Program 3
+Last Edited: 12/04/2025
+
+This class is the main Pac-Man game class. It is responsible for the game loop, drawing of the characters and asstes 
+
+ACADEMIC CITATION:
+Cursor AI. (2025). *Code generation and implementation assistance* [AI software]. Cursor. https://cursor.sh
+> "Clone the open-source Pac-Man game project you see in the current directory. It will be used for the university program in which we need to write a custom code for ghosts:
+>
+> - **Blinky**: The direct one. It chases Pac-Man based on current locations.
+> - **Pinky**: The smart one. It chases Pac-Man, but it aims for a location 2 dots ahead of Pac-Man, thus trying to anticipate movement.
+> - **Inky**: The hybrid. Its movement is a combination of Blinky and Pinky.
+> - **Clyde**: The scaredy-cat. It will chase Pac-Man directly, but when it gets within 8 dots it gets scared and runs.
+>
+> You should add custom classes for each of those ghosts so that I can program them from scratch.
+> Declare all the basic methods with comments for each ghost class.
+> At the end, you should come up with the same program but the ghosts should not move for now. Pac-Man object should act as it moved before."
+
+YouTube. (n.d.). *Pacman Java Tutorial* [Video]. YouTube. https://youtu.be/lB_J-VNMVpE
+*/
 public class PacMan extends JPanel implements ActionListener, KeyListener {
 
     private int rowCount = 21;
@@ -53,9 +76,10 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     HashSet<Block> foods;
     HashSet<Ghost> ghosts;
     Block pacman;
+    char nextDirection = ' ';
 
     Timer gameLoop;
-    char[] directions = {'U', 'D', 'L', 'R'}; //up down left right
+    char[] directions = {'U', 'D', 'L', 'R'};
     Random random = new Random();
     int score = 0;
     int lives = 3;
@@ -67,7 +91,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         addKeyListener(this);
         setFocusable(true);
 
-        //load images
         wallImage = new ImageIcon(getClass().getResource("./wall.png")).getImage();
         blueGhostImage = new ImageIcon(getClass().getResource("./blueGhost.png")).getImage();
         orangeGhostImage = new ImageIcon(getClass().getResource("./orangeGhost.png")).getImage();
@@ -80,12 +103,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         pacmanRightImage = new ImageIcon(getClass().getResource("./pacmanRight.png")).getImage();
 
         loadMap();
-        // Ghosts are initialized but movement is disabled
-        //for (Ghost ghost : ghosts) {
-        //    char newDirection = directions[random.nextInt(4)];
-        //    ghost.updateDirection(newDirection);
-        //}
-        //how long it takes to start timer, milliseconds gone between frames
         gameLoop = new Timer(75, this); //20fps (1000/50)
         gameLoop.start();
 
@@ -166,6 +183,16 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     }
 
     public void move() {
+        // Check if we can change direction (when aligned to grid)
+        if (nextDirection != ' ' && canChangeDirection(nextDirection)) {
+            pacman.direction = nextDirection;
+            pacman.updateVelocity();
+            nextDirection = ' '; // Clear queued direction
+            
+            // Update image only when direction actually changes
+            updatePacmanImage();
+        }
+        
         pacman.x += pacman.velocityX;
         pacman.y += pacman.velocityY;
 
@@ -261,12 +288,59 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         pacman.reset();
         pacman.velocityX = 0;
         pacman.velocityY = 0;
+        nextDirection = ' ';
         for (Ghost ghost : ghosts) {
             ghost.reset();
-            // Ghost movement is disabled for now
-            //char newDirection = directions[random.nextInt(4)];
-            //ghost.updateDirection(newDirection);
         }
+    }
+    
+    /**
+     * Checks if Pac-Man can change direction at the current position.
+     * Pac-Man can turn when aligned to the grid and the path in the new direction is clear.
+     * 
+     * @param newDirection The direction to check
+     * @return true if Pac-Man can turn in the new direction, false otherwise
+     */
+    private boolean canChangeDirection(char newDirection) {
+        int tileSize = this.tileSize;
+        int gridX = (pacman.x / tileSize) * tileSize;
+        int gridY = (pacman.y / tileSize) * tileSize;
+        int threshold = tileSize / 4;
+        
+        boolean alignedX = Math.abs(pacman.x - gridX) < threshold;
+        boolean alignedY = Math.abs(pacman.y - gridY) < threshold;
+        
+        if (newDirection == 'U' || newDirection == 'D') {
+            if (!alignedX) return false;
+        } else if (newDirection == 'L' || newDirection == 'R') {
+            if (!alignedY) return false;
+        }
+        
+        int testX = pacman.x;
+        int testY = pacman.y;
+        
+        testX = gridX;
+        testY = gridY;
+        
+        switch (newDirection) {
+            case 'U': testY -= tileSize; break;
+            case 'D': testY += tileSize; break;
+            case 'L': testX -= tileSize; break;
+            case 'R': testX += tileSize; break;
+        }
+        
+        if (testX < 0 || testX >= boardWidth || testY < 0 || testY >= boardHeight) {
+            return false;
+        }
+        
+        Block testBlock = new Block(this, null, testX, testY, tileSize, tileSize);
+        for (Block wall : walls) {
+            if (collision(testBlock, wall)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     @Override
@@ -294,20 +368,25 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
             gameOver = false;
             gameLoop.start();
         }
-        // System.out.println("KeyEvent: " + e.getKeyCode());
         if (e.getKeyCode() == KeyEvent.VK_UP) {
-            pacman.updateDirection('U');
+            nextDirection = 'U';
         }
         else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            pacman.updateDirection('D');
+            nextDirection = 'D';
         }
         else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            pacman.updateDirection('L');
+            nextDirection = 'L';
         }
         else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            pacman.updateDirection('R');
+            nextDirection = 'R';
         }
-
+    }
+    
+    /**
+     Updates Pac-Man's image based on the current direction.
+     This is called only when the direction actually changes, not when queued.
+     */
+    private void updatePacmanImage() {
         if (pacman.direction == 'U') {
             pacman.image = pacmanUpImage;
         }
